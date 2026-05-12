@@ -1,12 +1,13 @@
 import os
-import tweepy
+import requests
 import psycopg2
 from textblob import TextBlob
 
 class MeltwaterXCollector:
-    def __init__(self, bearer_token, db_url):
-        self.client = tweepy.Client(bearer_token=bearer_token)
+    def __init__(self, api_key, db_url):
+        self.api_key = api_key
         self.db_url = db_url
+        self.base_url = "https://api.twitterapi.io/twitter/tweet/advanced_search"
 
     def get_sentiment(self, text):
         analysis = TextBlob(text)
@@ -33,46 +34,47 @@ class MeltwaterXCollector:
             print(f"Database error: {e}")
 
     def run_ingestion(self, keyword):
-        query = f"({keyword}) -is:retweet lang:en"
+        headers = {"X-API-Key": self.api_key}
+        params = {
+            "query": f"({keyword}) -is:retweet lang:en",
+            "queryType": "Latest"
+        }
+        
         try:
-            # We add user_fields and expansions to get 'Enrichment' data
-            response = self.client.search_recent_tweets(
-                query=query,
-                tweet_fields=['created_at', 'author_id', 'public_metrics'],
-                user_fields=['location', 'public_metrics'],
-                expansions='author_id',
-                max_results=100
-            )
-            
-            if response.data:
-                users = {u.id: u for u in response.includes['users']} if 'users' in response.includes else {}
-                for tweet in response.data:
-                    # Sentiment Analysis
-                    sent_label, sent_score = self.get_sentiment(tweet.text)
+            response = requests.get(self.base_url, headers=headers, params=params)
+            if response.status_code == 200:
+                data = response.json()
+                tweets = data.get('tweets', [])
+                
+                for tweet in tweets:
+                    # 1. Sentiment Analysis
+                    sent_label, sent_score = self.get_sentiment(tweet['text'])
                     
-                    # Enrichment
-                    user = users.get(tweet.author_id)
-                    followers = user.public_metrics['followers_count'] if user else 0
-                    loc = user.location if user else "Unknown"
+                    # 2. Enrichment (twitterapi.io provides user data in the same object)
+                    user = tweet.get('author', {})
+                    followers = user.get('followersCount', 0)
+                    loc = user.get('location', "Unknown")
 
-                    self.save_to_db(tweet.id, tweet.text, tweet.author_id, tweet.created_at, 
-                                   sent_label, sent_score, followers, loc)
-                    print(f" Stored & Enriched: {tweet.id}")
+                    # 3. Save to Neon
+                    self.save_to_db(
+                        tweet['id'], tweet['text'], user.get('id'), tweet['createdAt'],
+                        sent_label, sent_score, followers, loc
+                    )
+                print(f"Successfully ingested {len(tweets)} tweets.")
             else:
-                print("No new data found.")
+                print(f"API Error {response.status_code}: {response.text}")
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Pipeline Error: {e}")
 
 if __name__ == "__main__":
-    token = os.getenv('X_BEARER_TOKEN')
+    key = os.getenv('X_BEARER_TOKEN') # This is your twitterapi.io key
     db_url = os.getenv('DATABASE_URL')
 
-    if not token or not db_url:
+    if not key or not db_url:
         raise ValueError("FATAL: Missing GitHub Secrets")
 
-    collector = MeltwaterXCollector(bearer_token=token, db_url=db_url)
+    collector = MeltwaterXCollector(api_key=key, db_url=db_url)
     
-    # FIXED TARGETS: No spaces in handles, quotes around phrases
     targets = (
         "@SafaricomPLC OR @MTNGroup OR @DangoteGroup OR @KCBGroup OR @EquityBank OR "
         "@AbsaSouthAfrica OR @NetflixNigeria OR @NCBABankKenya OR \"Ministry of Health\" OR "
