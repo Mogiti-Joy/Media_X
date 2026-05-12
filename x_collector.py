@@ -52,7 +52,6 @@ if __name__ == "__main__":
     collector = MeltwaterXCollector(bearer_token=token, db_url=db_url)
     
     # Tracking Big African Companies and Events
-    africa_targets = "@SafaricomPLC OR @MTNGroup OR @DangoteGroup OR @KCB OR @Equity OR @ABSA OR @SFA OR @Netflix OR @NCBA OR @MOH OR @AWF OR @BIDCO OR @East African Breweries Limited (EABL) OR @MasterCard OR @MasterCard Foundation" 
-        "#AFCON OR #WorldCup OR #TechInAfrica #AI OR #AMR"            
+    africa_targets = "@SafaricomPLC OR @MTNGroup OR @DangoteGroup OR @KCB OR @Equity OR @ABSA OR @SFA OR @Netflix OR @NCBA OR @MOH OR @AWF OR @BIDCO OR @East African Breweries Limited (EABL) OR @MasterCard OR @MasterCard Foundation OR #AFCON OR #WorldCup OR #TechInAfrica #AI OR #AMR"            
     
     collector.run_ingestion(keyword=africa_targets)
