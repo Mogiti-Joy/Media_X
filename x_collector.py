@@ -76,6 +76,7 @@ if __name__ == "__main__":
     collector = MeltwaterXCollector(api_key=key, db_url=db_url)
     
     targets = (
+        "#TechInAfrica OR #AfricaTech OR #NairobiTech OR #LagosTech OR #CapeTownTech OR #AfricanStartups) "
         "@SafaricomPLC OR @MTNGroup OR @DangoteGroup OR @KCBGroup OR @EquityBank OR "
         "@AbsaSouthAfrica OR @NetflixNigeria OR @NCBABankKenya OR \"Ministry of Health\" OR "
         "@AWF_Official OR @BidcoGroup OR \"East African Breweries\" OR @Mastercard OR "
