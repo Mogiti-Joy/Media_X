@@ -186,5 +186,5 @@ if __name__ == "__main__":
     if not key or not db_url:
         raise ValueError("FATAL: Missing environment variables (X_BEARER_TOKEN, DATABASE_URL)")
 
-    collector = MeltwaterXCollector(api_key=key, db_url=db_url)
+    collector = MediaPulseXCollector(api_key=key, db_url=db_url)
     asyncio.run(collector.run_ingestion(keyword=TARGETS))
