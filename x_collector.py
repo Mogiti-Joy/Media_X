@@ -7,6 +7,7 @@ import httpx
 from textblob import TextBlob
 from datetime import datetime
 from typing import Optional
+import urllib.parse
 
 # Structured logging
 logging.basicConfig(
@@ -178,13 +179,28 @@ TARGETS = (
     "#AFCON OR #WorldCup OR #AI OR #AMR) "
     "-is:retweet lang:en"
 )
-
 if __name__ == "__main__":
     key = os.getenv("X_BEARER_TOKEN")
-    db_url = os.getenv("DATABASE_URL")
+    raw_db_url = os.getenv("DATABASE_URL")
 
-    if not key or not db_url:
+    if not key or not raw_db_url:
         raise ValueError("FATAL: Missing environment variables (X_BEARER_TOKEN, DATABASE_URL)")
+
+    # 1. Parse the connection string
+    parsed = urllib.parse.urlparse(raw_db_url)
+    
+    # 2. Extract and URL-encode only the password component if it exists
+    if parsed.password:
+        encoded_password = urllib.parse.quote_plus(parsed.password)
+        # Rebuild the netloc with the safely encoded password
+        netloc = f"{parsed.username}:{encoded_password}@{parsed.hostname}"
+        if parsed.port:
+            netloc += f":{parsed.port}"
+        
+        # 3. Reconstruct the clean URL
+        db_url = parsed._replace(netloc=netloc).geturl()
+    else:
+        db_url = raw_db_url
 
     collector = MediaPulseXCollector(api_key=key, db_url=db_url)
     asyncio.run(collector.run_ingestion(keyword=TARGETS))
