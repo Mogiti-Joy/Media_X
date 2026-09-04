@@ -175,7 +175,11 @@ TARGETS = (
     "@SafaricomPLC OR @MTNGroup OR @DangoteGroup OR @KCBGroup OR @EquityBank OR "
     "@AbsaSouthAfrica OR @Netflix OR @NCBABankKenya OR "
     "@AfricanWildlifeFoundation OR @KenyattaNationalHospital OR "
-    "@MastercardAfrica OR "
+    "@MastercardAfricasecondaryeducation OR "
+    "@MastercardAfricatransitions OR "
+    "@MastercardAfricacentreforinnovativeteachingandlearning OR "
+    "@MastercardAfricaCITL OR "
+    "@MastercardAfricascholars OR "
     "#AFCON OR #WorldCup OR #AI OR #AMR) "
     "-is:retweet lang:en"
 )
